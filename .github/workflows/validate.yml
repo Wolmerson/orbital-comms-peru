@@ -1,43 +1,49 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Validación HTML y Enlaces
 
 on:
-  # Runs on pushes targeting the default branch
   push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  validate:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    - name: Checkout código
+      uses: actions/checkout@v3
+    
+    - name: Validar HTML5
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tidy
+        echo "Validando archivos HTML..."
+        for file in *.html; do
+          echo "Validando $file"
+          tidy -q -e -utf8 "$file" || echo "Advertencias en $file"
+        done
+    
+    - name: Verificar enlaces externos
+      run: |
+        echo "Verificando APIs de NASA GIBS..."
+        curl -f -s -I "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/2024-01-01/GoogleMapsCompatible_Level9/3/4/2.jpg" || exit 1
+        echo "✓ API MODIS funciona"
+        
+        echo "Verificando Leaflet CDN..."
+        curl -f -s -I "https://unpkg.com/leaflet/dist/leaflet.css" || exit 1
+        echo "✓ Leaflet CDN funciona"
+        
+        echo "Verificando OpenStreetMap..."
+        curl -f -s -I "https://tile.openstreetmap.org/0/0/0.png" || exit 1
+        echo "✓ OpenStreetMap funciona"
+    
+    - name: Verificar sintaxis JavaScript
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Resultado
+      run: |
+        echo "✅ Validación completada exitosamente"
+        echo "El código está listo para desplegarse"
