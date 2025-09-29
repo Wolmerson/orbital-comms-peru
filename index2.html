@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Orbital Comms — Visualizador Perú (NASA GIBS + Calles)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html,body { height:100%; margin:0; padding:0; font-family: Arial, sans-serif; }
+    #topbar { background:#111; color:#fff; padding:8px 12px; display:flex; align-items:center; gap:12px; }
+    #topbar h1 { margin:0; font-size:18px; }
+    #controls { margin-left:auto; display:flex; gap:8px; align-items:center; }
+    #map { width:100%; height:calc(100% - 48px); } 
+    .btn { background:#2b7; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; }
+    .btn.secondary { background:#48f; color:#fff; }
+    label { color:#fff; font-size:13px; margin-right:6px; }
+    input[type="date"] { padding:4px; border-radius:4px; border:1px solid #ccc; }
+    .infoPane {
+      position:absolute;
+      top:60px;
+      left:12px;
+      z-index:1000;
+      background:rgba(255,255,255,0.95);
+      padding:8px;
+      border-radius:6px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+      max-width:320px;
+      font-size:13px;
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <h1>Orbital Comms — Visualizador Perú (NASA GIBS + Calles)</h1>
+    <div id="controls">
+      <label for="date">Fecha:</label>
+      <input id="date" type="date" />
+      <button id="goDate" class="btn secondary">Aplicar fecha</button>
+      <button id="fitPeru" class="btn">Ir a Perú</button>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="info" class="infoPane" style="display:block;">
+    <strong>Coordenadas seleccionadas</strong>
+    <div id="coords">Haz clic en el mapa</div>
+    <hr style="margin:6px 0;">
+    <div id="layerInfo">Capa: MODIS True Color</div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const peruBounds = [[-18.5, -81.5], [1.0, -68.0]];
+    const today = new Date().toISOString().split('T')[0];
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('date').value = today;
+    });
+
+    const map = L.map('map', { zoomSnap: 0.5 }).setView([-9.2, -75], 5);
+
+    // Plantillas WMTS
+    function modisTemplate(time) {
+      return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/${time}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
+    }
+    function imergTemplate(time) {
+      return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/IMERG_Precipitation_Rate_30min/default/${time}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`;
+    }
+
+    // Capas
+    const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri' });
+
+    let currentDate = today;
+    let modisLayer = L.tileLayer(modisTemplate(currentDate), { tileSize:256, minZoom:2, maxZoom:9, noWrap:true, attribution:"NASA EOSDIS GIBS — MODIS Terra True Color" });
+    let imergLayer = L.tileLayer(imergTemplate(currentDate), { tileSize:256, minZoom:2, maxZoom:6, opacity:0.65, noWrap:true, attribution:"NASA EOSDIS GIBS — IMERG Precipitation Rate (30min)" });
+
+    // Capa de calles OSM (overlay solo visible en zoom >10)
+    let streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap contributors', opacity:0.8 });
+
+    modisLayer.addTo(map);
+
+    const baseLayers = { "MODIS True Color (GIBS)": modisLayer, "Esri World Imagery": esri };
+    const overlays = { "IMERG Precipitación (30min)": imergLayer, "Calles (OSM, zoom>10)": streetLayer };
+    let layerControl = L.control.layers(baseLayers, overlays, { collapsed:false }).addTo(map);
+
+    // Mostrar calles solo si zoom > 10
+    map.on('zoomend', () => {
+      if (map.getZoom() > 10) {
+        if (!map.hasLayer(streetLayer)) streetLayer.addTo(map);
+      } else {
+        if (map.hasLayer(streetLayer)) map.removeLayer(streetLayer);
+      }
+    });
+
+    document.getElementById('fitPeru').addEventListener('click', () => {
+      map.fitBounds(peruBounds, { padding: [20,20] });
+    });
+
+    document.getElementById('goDate').addEventListener('click', () => {
+      const d = document.getElementById('date').value;
+      if (!d) { alert('Elige una fecha.'); return; }
+      currentDate = d;
+      if (map.hasLayer(modisLayer)) map.removeLayer(modisLayer);
+      if (map.hasLayer(imergLayer)) map.removeLayer(imergLayer);
+      try { map.removeControl(layerControl); } catch(e){}
+
+      modisLayer = L.tileLayer(modisTemplate(currentDate), { tileSize:256, minZoom:2, maxZoom:9, noWrap:true, attribution:"NASA EOSDIS GIBS — MODIS Terra True Color" });
+      imergLayer = L.tileLayer(imergTemplate(currentDate), { tileSize:256, minZoom:2, maxZoom:6, opacity:0.65, noWrap:true, attribution:"NASA EOSDIS GIBS — IMERG Precipitation Rate (30min)" });
+
+      modisLayer.addTo(map);
+      layerControl = L.control.layers(baseLayers, overlays, {collapsed:false}).addTo(map);
+      document.getElementById('layerInfo').innerText = `Capa: MODIS True Color — Fecha: ${currentDate}`;
+    });
+
+    // Click para coordenadas
+    let marker = null;
+    map.on('click', function(e) {
+      const lat = Number(e.latlng.lat).toFixed(6);
+      const lon = Number(e.latlng.lng).toFixed(6);
+      document.getElementById('coords').innerHTML = `Lat: <strong>${lat}</strong>, Lon: <strong>${lon}</strong>`;
+      if (marker) map.removeLayer(marker);
+      marker = L.marker([lat, lon]).addTo(map);
+    });
+
+    map.fitBounds(peruBounds, { padding:[20,20] });
+    L.control.scale().addTo(map);
+
+  </script>
+</body>
+</html>

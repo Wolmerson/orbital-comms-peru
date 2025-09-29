@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Orbital Comms — Visualizador Perú (NASA GIBS)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html, body { height:100%; margin:0; padding:0; font-family: Arial, sans-serif; }
+    #topbar { background:#111; color:#fff; padding:8px 12px; display:flex; align-items:center; gap:12px; }
+    #topbar h1 { margin:0; font-size:18px; }
+    #controls { margin-left:auto; display:flex; gap:8px; align-items:center; }
+    #map { width:100%; height:calc(100% - 52px); } /* dejar espacio para la barra superior */
+    .btn { background:#2b7; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; }
+    .btn.secondary { background:#48f; color:#fff; }
+    label { color:#fff; font-size:13px; margin-right:6px; }
+    input[type="date"] { padding:4px; border-radius:4px; border:1px solid #ccc; }
+    /* Info panel: bottom-left por defecto, colapsable y draggable */
+    .infoPane {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      top: auto;
+      right: auto;
+      z-index: 600;
+      background: rgba(255,255,255,0.95);
+      padding: 0;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      max-width: 320px;
+      font-size: 13px;
+      overflow: hidden;
+      user-select: none;
+    }
+    .infoHeader {
+      background: linear-gradient(#f7f7f7, #eaeaea);
+      padding: 8px 10px;
+      cursor: move;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .infoBody { padding: 8px 10px; color:#111; }
+    .infoPane.collapsed { width: 220px; height: 36px; overflow: hidden; border-radius:6px; }
+    .infoPane.collapsed .infoBody { display:none; }
+    .infoPane.collapsed #infoToggle { transform: rotate(-90deg); }
+    @media (max-width:640px) {
+      .infoPane { left:8px; bottom:8px; max-width:240px; }
+      .infoPane { transition: transform .15s ease; }
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <h1>Orbital Comms — Visualizador Perú (NASA GIBS)</h1>
+    <div id="controls">
+      <label for="date">Fecha:</label>
+      <input id="date" type="date" />
+      <button id="goDate" class="btn secondary">Aplicar fecha</button>
+      <button id="fitPeru" class="btn">Ir a Perú</button>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <!-- Info panel (colapsable, draggable) -->
+  <div id="info" class="infoPane">
+    <div id="infoHeader" class="infoHeader" title="Arrastra para mover">
+      <strong>Coordenadas seleccionadas</strong>
+      <button id="infoToggle" style="background:none; border:none; font-size:16px; cursor:pointer;" aria-label="Minimizar">▾</button>
+    </div>
+    <div id="infoBody" class="infoBody">
+      <div id="coords">Haz clic en el mapa</div>
+      <hr style="margin:6px 0;">
+      <div id="layerInfo">Capa: MODIS True Color</div>
+      <div style="margin-top:6px; font-size:12px; color:#333;"><em>Puedes minimizar o arrastrar este panel.</em></div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // ---------- Config ----------
+    // BOUNDS de Perú (southWest, northEast) [lat,lon]
+    const peruBounds = [[-18.5, -81.5], [1.0, -68.0]];
+    const today = new Date().toISOString().split('T')[0];
+
+    // init date input
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('date').value = today;
+    });
+
+    // ---------- Mapa ----------
+    const map = L.map('map', { zoomSnap: 0.5, worldCopyJump: false }).setView([-9.2, -75], 5);
+
+    // Templates WMTS GIBS (EPSG:3857 / Google compatible)
+    function modisTemplate(time) {
+      return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/${time}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
+    }
+    function imergTemplate(time) {
+      return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/IMERG_Precipitation_Rate_30min/default/${time}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`;
+    }
+
+    // fallback base (Esri) para diagnosticar
+    const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri' });
+
+    // Capas iniciales
+    let currentDate = today;
+    let modisLayer = L.tileLayer(modisTemplate(currentDate), {
+      tileSize: 256,
+      minZoom: 2,
+      maxZoom: 9,
+      noWrap: true,
+      errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==', // transparente
+      attribution: "NASA EOSDIS GIBS — MODIS Terra True Color",
+      detectRetina: false
+    });
+    let imergLayer = L.tileLayer(imergTemplate(currentDate), {
+      tileSize: 256,
+      minZoom: 2,
+      maxZoom: 6,
+      opacity: 0.65,
+      noWrap: true,
+      errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+      attribution: "NASA EOSDIS GIBS — IMERG Precipitation Rate (30min)",
+      detectRetina: false
+    });
+
+    // añadir MODIS por defecto
+    modisLayer.addTo(map);
+
+    // control de capas
+    let layerControl = L.control.layers({"MODIS True Color (GIBS)": modisLayer, "Esri World Imagery (fallback)": esri}, {"IMERG Precipitación (30min)": imergLayer}, { collapsed:false }).addTo(map);
+
+    // boton Ir a Peru
+    document.getElementById('fitPeru').addEventListener('click', () => {
+      map.fitBounds(peruBounds, { padding:[20,20] });
+    });
+
+    // aplicar fecha (recrea capas)
+    document.getElementById('goDate').addEventListener('click', () => {
+      const d = document.getElementById('date').value;
+      if (!d) { alert('Elige una fecha.'); return; }
+      currentDate = d;
+      // remove existing layers if present
+      if (map.hasLayer(modisLayer)) map.removeLayer(modisLayer);
+      if (map.hasLayer(imergLayer)) map.removeLayer(imergLayer);
+      try { map.removeControl(layerControl); } catch(e){}
+
+      modisLayer = L.tileLayer(modisTemplate(currentDate), {
+        tileSize:256, minZoom:2, maxZoom:9, noWrap:true,
+        errorTileUrl:'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+        attribution: "NASA EOSDIS GIBS — MODIS Terra True Color", detectRetina:false
+      });
+      imergLayer = L.tileLayer(imergTemplate(currentDate), {
+        tileSize:256, minZoom:2, maxZoom:6, opacity:0.65, noWrap:true,
+        errorTileUrl:'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+        attribution: "NASA EOSDIS GIBS — IMERG Precipitation Rate (30min)", detectRetina:false
+      });
+
+      modisLayer.addTo(map);
+      layerControl = L.control.layers({"MODIS True Color (GIBS)": modisLayer, "Esri World Imagery (fallback)": esri}, {"IMERG Precipitación (30min)": imergLayer}, {collapsed:false}).addTo(map);
+      document.getElementById('layerInfo').innerText = `Capa: MODIS True Color — Fecha: ${currentDate}`;
+    });
+
+    // ---------- click y marcador ----------
+    let marker = null;
+    map.on('click', function(e) {
+      const lat = Number(e.latlng.lat).toFixed(6);
+      const lon = Number(e.latlng.lng).toFixed(6);
+      document.getElementById('coords').innerHTML = `Lat: <strong>${lat}</strong>, Lon: <strong>${lon}</strong>`;
+      if (marker) map.removeLayer(marker);
+      marker = L.marker([lat, lon]).addTo(map);
+      // Si panel está colapsado lo abrimos para mostrar coords
+      const info = document.getElementById('info');
+      if (info.classList.contains('collapsed')) info.classList.remove('collapsed');
+    });
+
+    // fit Perú al inicio
+    map.fitBounds(peruBounds, { padding:[20,20] });
+
+    // ---------- debugging: tile errors en consola ----------
+    function onTileError(err) { console.warn("Tile error", err); }
+    modisLayer.on('tileerror', onTileError);
+    imergLayer.on('tileerror', onTileError);
+
+    // ---------- Info panel: toggle + draggable ----------
+    (function(){
+      const info = document.getElementById('info');
+      const header = document.getElementById('infoHeader');
+      const toggle = document.getElementById('infoToggle');
+      const coordsDiv = document.getElementById('coords');
+
+      if (window.innerWidth <= 640) info.classList.add('collapsed');
+
+      toggle.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        info.classList.toggle('collapsed');
+      });
+
+      // Drag implementation
+      let dragging = false, startX=0, startY=0, origLeft=0, origTop=0;
+      header.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        header.setPointerCapture(e.pointerId);
+        startX = e.clientX; startY = e.clientY;
+        const rect = info.getBoundingClientRect();
+        origLeft = rect.left; origTop = rect.top;
+        map.getContainer().style.pointerEvents = 'none';
+      });
+      window.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - startX; const dy = e.clientY - startY;
+        let newLeft = origLeft + dx; let newTop  = origTop + dy;
+        newLeft = Math.max(6, Math.min(window.innerWidth - info.offsetWidth - 6, newLeft));
+        newTop  = Math.max(6, Math.min(window.innerHeight - 36, newTop));
+        info.style.left = `${newLeft}px`;
+        info.style.top  = `${newTop}px`;
+        info.style.bottom = 'auto'; info.style.right = 'auto';
+      });
+      window.addEventListener('pointerup', (e) => {
+        if (!dragging) return;
+        dragging = false;
+        try { header.releasePointerCapture(e.pointerId); } catch(e){}
+        map.getContainer().style.pointerEvents = '';
+      });
+
+      // Evitar colisión con layer control: mover si se solapan
+      function avoidCollisionWithLayerControl(){
+        const layerControls = document.querySelectorAll('.leaflet-control-layers');
+        if (layerControls.length === 0) return;
+        const lc = layerControls[0].getBoundingClientRect();
+        const ip = info.getBoundingClientRect();
+        const overlapX = !(ip.right < lc.left || ip.left > lc.right);
+        const overlapY = !(ip.bottom < lc.top || ip.top > lc.bottom);
+        if (overlapX && overlapY){
+          info.style.top = `${lc.bottom + 10}px`;
+          info.style.left = `${Math.max(8, lc.left - ip.width - 10)}px`;
+          info.style.bottom = 'auto';
+        }
+      }
+      setTimeout(avoidCollisionWithLayerControl, 500);
+      setTimeout(avoidCollisionWithLayerControl, 1500);
+    })();
+
+    // add scale
+    L.control.scale().addTo(map);
+  </script>
+</body>
+</html>
