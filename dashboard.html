@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CI/CD Dashboard - Orbital Comms</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+</style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white min-h-screen p-6">
+<div class="max-w-7xl mx-auto">
+  
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
+      CI/CD Pipeline - Orbital Comms
+    </h1>
+    <p class="text-slate-400">Visualizador Satelital NASA GIBS para Perú</p>
+    <a href="index.html" class="inline-flex items-center gap-2 mt-2 text-sm text-blue-400 hover:text-blue-300">
+      ← Volver al mapa
+    </a>
+  </div>
+
+  <!-- Status Banner -->
+  <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-8">
+    <div class="flex items-center gap-3">
+      <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <div>
+        <p class="font-semibold text-green-400">Pipeline Operativo</p>
+        <p class="text-sm text-green-200">Todos los workflows están funcionando correctamente.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+      <p class="text-slate-400 text-xs mb-2">Total Deploys</p>
+      <p class="text-2xl font-bold text-blue-400">11+</p>
+    </div>
+    <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+      <p class="text-slate-400 text-xs mb-2">Success Rate</p>
+      <p class="text-2xl font-bold text-green-400">100%</p>
+    </div>
+    <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+      <p class="text-slate-400 text-xs mb-2">Avg Time</p>
+      <p class="text-2xl font-bold text-purple-400">33s</p>
+    </div>
+    <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+      <p class="text-slate-400 text-xs mb-2">Uptime</p>
+      <p class="text-2xl font-bold text-teal-400">100%</p>
+    </div>
+  </div>
+
+  <!-- Workflows -->
+  <div class="bg-slate-800/50 rounded-lg p-6 border border-slate-700 mb-8">
+    <h2 class="text-xl font-bold mb-6">Workflows Activos</h2>
+    
+    <div class="space-y-3">
+      <div class="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
+            <div>
+              <h3 class="font-semibold">Deploy to GitHub Pages</h3>
+              <p class="text-sm text-slate-400">Despliega automáticamente a producción</p>
+            </div>
+          </div>
+          <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Activo</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
+            <div>
+              <h3 class="font-semibold">Validación HTML y Enlaces</h3>
+              <p class="text-sm text-slate-400">Valida código y verifica dependencias</p>
+            </div>
+          </div>
+          <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Activo</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
+            <div>
+              <h3 class="font-semibold">Test APIs NASA GIBS</h3>
+              <p class="text-sm text-slate-400">Monitorea servicios NASA cada 6 horas</p>
+            </div>
+          </div>
+          <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Activo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline Flow -->
+  <div class="bg-slate-800/50 rounded-lg p-6 border border-slate-700 mb-8">
+    <h2 class="text-xl font-bold mb-6">Flujo del Pipeline</h2>
+    <div class="space-y-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">1</div>
+        <div class="flex-1">
+          <h3 class="font-bold">Commit & Push</h3>
+          <p class="text-sm text-slate-400">git push origin main</p>
+        </div>
+        <span class="text-xs bg-slate-600 px-2 py-1 rounded">5s</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">2</div>
+        <div class="flex-1">
+          <h3 class="font-bold">Trigger Workflows</h3>
+          <p class="text-sm text-slate-400">GitHub Actions activado</p>
+        </div>
+        <span class="text-xs bg-slate-600 px-2 py-1 rounded">2s</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">3</div>
+        <div class="flex-1">
+          <h3 class="font-bold">Validación HTML</h3>
+          <p class="text-sm text-slate-400">Tests y validaciones</p>
+        </div>
+        <span class="text-xs bg-slate-600 px-2 py-1 rounded">37s</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">4</div>
+        <div class="flex-1">
+          <h3 class="font-bold">Test APIs NASA</h3>
+          <p class="text-sm text-slate-400">Monitoreo de servicios</p>
+        </div>
+        <span class="text-xs bg-slate-600 px-2 py-1 rounded">25s</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">5</div>
+        <div class="flex-1">
+          <h3 class="font-bold">Build & Deploy</h3>
+          <p class="text-sm text-slate-400">GitHub Pages deployment</p>
+        </div>
+        <span class="text-xs bg-slate-600 px-2 py-1 rounded">38s</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">✓</div>
+        <div class="flex-1">
+          <h3 class="font-bold">Producción</h3>
+          <p class="text-sm text-slate-400">Sitio en vivo</p>
+        </div>
+        <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Live</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Links -->
+  <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6">
+    <h3 class="font-semibold text-blue-400 mb-3">Enlaces Útiles</h3>
+    <div class="space-y-2 text-sm">
+      <a href="https://github.com/Wolmerson/orbital-comms-peru" target="_blank" class="block text-blue-300 hover:text-blue-200">→ Ver repositorio en GitHub</a>
+      <a href="https://github.com/Wolmerson/orbital-comms-peru/actions" target="_blank" class="block text-blue-300 hover:text-blue-200">→ Ver workflows en tiempo real</a>
+      <a href="https://wolmerson.github.io/orbital-comms-peru/" target="_blank" class="block text-blue-300 hover:text-blue-200">→ Ver sitio en producción</a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
