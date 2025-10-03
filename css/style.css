@@ -1,6 +1,14 @@
 /* ================= RESET ================= */
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Poppins',sans-serif; color:#EDEDED; background:#0a0a0a; scroll-behavior:smooth; }
+html, body { height:100%; }
+body { 
+  font-family:'Poppins',sans-serif; 
+  color:#EDEDED; 
+  background:#0a0a0a; 
+  scroll-behavior:smooth; 
+  /* importante: dejar espacio para el header fijo */
+  padding-top: 80px;
+}
 a { text-decoration:none; color: inherit; }
 img { max-width:100%; display:block; }
 
@@ -9,18 +17,19 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 40px;       /* reduce padding para no aumentar la altura */
-  height: 80px;             /* altura fija */
-  background: rgba(0,0,0,0.8);
+  padding: 8px 28px;       /* ajuste menor */
+  height: 80px;            /* altura fija */
+  background: rgba(0,0,0,0.85);
   position: fixed;
   width: 100%;
   top: 0;
-  z-index: 1000;
+  left: 0;
+  z-index: 1400;           /* suficientemente alto para sobreponer otros controles */
   transition: all 0.3s;
 }
 
 header.sticky {
-  background: rgba(0,0,0,0.95);
+  background: rgba(0,0,0,0.98);
   box-shadow: 0 0 15px #00FFEA;
 }
 
@@ -31,8 +40,9 @@ header .logo {
   gap: 10px;
 }
 
+/* !Corregido! limitar logo a la altura del header */
 header .logo img {
-  max-height: 200px;     /* tamaño máximo en escritorio */
+  max-height: 56px;    /* ajustado para no romper la barra */
   width: auto;
   transition: transform 0.3s;
 }
@@ -44,18 +54,26 @@ header .logo img:hover {
 /* Navegación */
 header nav {
   display: flex;
-  gap: 20px;
+  gap: 18px;
+  align-items: center;
 }
 
+/* Asegurar contraste y visibilidad del texto */
 header nav a {
-  color: #EDEDED;
+  color: #EDEDED !important;
   font-weight: 600;
-  transition: 0.3s;
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: background 0.18s, color 0.18s, transform 0.18s;
+  display: inline-block;
 }
 
+/* Fondo suave al pasar el ratón, texto brillante */
 header nav a:hover {
-  color: #00FFEA;
-  text-shadow: 0 0 8px #00FFEA;
+  color: #001216;
+  background: linear-gradient(90deg, rgba(0,255,234,0.12), rgba(0,255,234,0.06));
+  transform: translateY(-2px);
+  text-shadow: none;
 }
 
 /* Toggle menú hamburguesa */
@@ -77,18 +95,19 @@ header nav a:hover {
 /* ================= RESPONSIVE ================= */
 @media(max-width: 768px) {
   header .logo img {
-    max-height: 120px;   
+    max-height: 48px;   
   }
   header nav {
     display: none;
     position: absolute;
     top: 80px;          
-    right: 0;
-    background: rgba(0,0,0,0.9);
+    right: 12px;
+    background: rgba(0,0,0,0.92);
     flex-direction: column;
-    width: 200px;
-    padding: 15px;
+    width: 220px;
+    padding: 12px;
     border-radius: 10px;
+    z-index: 1500;
   }
 
   header nav.show {
@@ -100,7 +119,7 @@ header nav a:hover {
   }
 
   header nav a {
-    margin: 10px 0;
+    margin: 8px 0;
   }
 }
 
@@ -266,7 +285,6 @@ section { padding:100px 20px; text-align:center; }
   pointer-events: none;
 }
 
-
 /* ================= FOOTER ================= */
 footer { background:rgba(0,0,0,0.85); padding:20px; text-align:center; color:#00FFEA; text-shadow:0 0 8px #00FFEA; }
 
@@ -280,6 +298,62 @@ footer { background:rgba(0,0,0,0.85); padding:20px; text-align:center; color:#00
   header nav.show { display:flex; }
   .nav-toggle { display:flex; }
 }
+
+/* ================= LEAFLET / GIBS - Contrastes y accesibilidad ================= */
+/* Asegurar que las etiquetas y textos dentro de los controles de Leaflet sean legibles */
+.leaflet-container .leaflet-control, 
+.leaflet-control-layers, 
+.leaflet-control-layers a, 
+.leaflet-control-layers label,
+.leaflet-control-layers .leaflet-control-layers-overlays,
+.leaflet-control-layers .leaflet-control-layers-base {
+  color: #ffffff !important;
+  background: rgba(10,10,10,0.75) !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  border-radius: 6px;
+}
+
+/* Asegurar texto visible y padding en labels */
+.leaflet-control-layers label,
+.leaflet-control-layers span {
+  color: #fff !important;
+  padding: 4px 6px;
+  font-size: 14px;
+  display: inline-block;
+}
+
+/* Mejorar la apariencia del toggle (caja) */
+.leaflet-control-layers-toggle {
+  background-color: rgba(255,255,255,0.06) !important;
+  border-radius: 6px !important;
+  width: 26px !important;
+  height: 26px !important;
+  box-shadow: none !important;
+}
+
+/* Evitar que los textos queden cortados por overflow */
+.leaflet-control-layers-expanded {
+  max-height: 60vh !important;
+  overflow: auto !important;
+}
+
+/* ================= BOTONES GLOBALES (.btn usados en HTML) ================= */
+.btn {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:6px;
+  background:#00FFEA;
+  color:#001216;
+  font-weight:700;
+  border:none;
+  cursor:pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+  box-shadow: 0 4px 12px rgba(0,255,234,0.12);
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,255,234,0.18); }
+.btn.secondary { background:#48f; color:#fff; }
 
 /* ================= ANIMATIONS KEYFRAMES ================= */
 @keyframes fadeUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
