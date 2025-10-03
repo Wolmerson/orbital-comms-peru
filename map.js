@@ -1,12 +1,9 @@
 const peruBounds = [[-18.5, -81.5], [1.0, -68.0]];
 const piuraBounds = [[-5.3, -80.75], [-5.1, -80.55]];
-const dateObj = new Date();
-dateObj.setDate(dateObj.getDate() - 3);
-const defaultDate = dateObj.toISOString().split('T')[0];
+const today = new Date().toISOString().split('T')[0];
 
 document.addEventListener('DOMContentLoaded', () => { 
-  document.getElementById('date').value = defaultDate; 
-});
+  document.getElementById('date').value = today; 
 
   const map = L.map('map', { zoomSnap: 0.5 }).setView([-9.2, -75], 5);
 
@@ -16,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri' });
 
-  let currentDate = defaultDate;
+  let currentDate = today;
   let modisLayer = L.tileLayer(modisTemplate(currentDate), { tileSize:256, minZoom:2, maxZoom:9, noWrap:true, attribution:"NASA EOSDIS GIBS — MODIS Terra True Color" });
   let imergLayer = L.tileLayer(imergTemplate(currentDate), { tileSize:256, minZoom:2, maxZoom:6, opacity:0.65, noWrap:true, attribution:"NASA EOSDIS GIBS — IMERG Precipitation Rate (30min)" });
   let sstLayer = L.tileLayer(sstAnomalyTemplate(currentDate), { tileSize:256, minZoom:2, maxZoom:6, opacity:0.75, noWrap:true, attribution:"NASA EOSDIS GIBS — Sea Surface Temperature Anomalies" });

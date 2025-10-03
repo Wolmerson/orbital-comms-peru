@@ -124,22 +124,3 @@ label {
   background:#48f; 
   color:#fff; 
 }
-
-/* Fix para texto del control de capas de Leaflet */
-.leaflet-control-layers {
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.leaflet-control-layers-list {
-  color: #000 !important;
-}
-
-.leaflet-control-layers label {
-  color: #000 !important;
-  font-weight: normal;
-}
-
-.leaflet-control-layers-base label,
-.leaflet-control-layers-overlays label {
-  color: #000 !important;
-}
