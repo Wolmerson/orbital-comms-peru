@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Visualizador Piura — NASA GIBS + Mapa de Calor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/map.css" />
+
+<!-- Librerías externas -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div id="topbar">
+  <h1>Visualizador Piura — NASA GIBS + Mapa de Calor</h1>
+  <div id="controls">
+    <label for="date">Fecha:</label>
+    <input id="date" type="date" />
+    <button id="goDate" class="btn secondary">Aplicar fecha</button>
+    <button id="fitPeru" class="btn">Ir a Perú</button>
+    <button id="fitPiura" class="btn">Ir a Piura</button>
+
+    <div class="tabsControl">
+      <button class="tabBtn active" data-tab="fenomenoPane">Fenómeno Niño 2019</button>
+      <button class="tabBtn" data-tab="prediccionPane">Predicción / Zonas Seguras</button>
+    </div>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<div id="info" class="infoPane" style="display:block;">
+  <strong>Coordenadas seleccionadas</strong>
+  <div id="coords">Haz clic en el mapa</div>
+  <hr style="margin:6px 0;">
+  <div id="layerInfo">Capa: MODIS True Color</div>
+</div>
+
+<!-- === PESTAÑA FENOMENO NIÑO 2019 === -->
+<div id="fenomenoPane" class="tabContent" style="display:block;">
+  <img src="https://cdn-icons-png.flaticon.com/512/1995/1995530.png" alt="Profesor" style="float:right; width:50px; margin-left:10px;">
+  <h3 style="border-bottom:1px solid #ccc; padding-bottom:4px;">Fenómeno El Niño 2019</h3>
+  <p>El Fenómeno del Niño 2019 afectó Piura y norte del Perú con lluvias intensas, inundaciones y huaicos.</p>
+  
+  <div style="display:flex; gap:20px; margin-top:10px;">
+    <div style="flex:1; background:#f0f0f0; padding:8px; border-radius:6px;">
+      <h4>Lluvias (mm)</h4>
+      <div style="background:#ddd; height:20px; border-radius:10px; overflow:hidden;">
+        <div style="width:85%; height:100%; background:linear-gradient(90deg, #00f,#0ff);"></div>
+      </div>
+      <p style="margin:4px 0; font-size:12px;">Máxima acumulada: 420 mm en marzo</p>
+    </div>
+    <div style="flex:1; background:#f0f0f0; padding:8px; border-radius:6px;">
+      <h4>Inundaciones</h4>
+      <div style="background:#ddd; height:20px; border-radius:10px; overflow:hidden;">
+        <div style="width:65%; height:100%; background:linear-gradient(90deg, #0f0,#8f8);"></div>
+      </div>
+      <p style="margin:4px 0; font-size:12px;">Personas afectadas: 50,000+ en Piura</p>
+    </div>
+    <div style="flex:1; background:#f0f0f0; padding:8px; border-radius:6px;">
+      <h4>Huaicos</h4>
+      <div style="background:#ddd; height:20px; border-radius:10px; overflow:hidden;">
+        <div style="width:40%; height:100%; background:linear-gradient(90deg, #f00,#f88);"></div>
+      </div>
+      <p style="margin:4px 0; font-size:12px;">Quebradas colapsadas: 12+</p>
+    </div>
+  </div>
+
+  <h4 style="margin-top:15px;">Precipitación promedio por mes</h4>
+  <canvas id="rainChart" width="320" height="120" style="background:#fff; border-radius:6px;"></canvas>
+
+  <h4 style="margin-top:15px;">Impacto en cultivos</h4>
+  <p>El Niño 2019 afectó principalmente arroz, maíz y algodón, reduciendo producción en varias regiones:</p>
+  <canvas id="cropChart" width="320" height="120" style="background:#fff; border-radius:6px; margin-top:5px;"></canvas>
+
+  <ul style="margin-top:10px;">
+    <li><strong>Inicio:</strong> Enero 2019</li>
+    <li><strong>Máxima precipitación:</strong> Marzo 2019</li>
+    <li><strong>Áreas afectadas:</strong> Piura, Tumbes, Lambayeque, La Libertad</li>
+    <li><strong>Inundaciones:</strong> Más de 50 mil personas afectadas en Piura</li>
+    <li><strong>Huaicos y desbordes:</strong> Varias quebradas colapsaron</li>
+    <li><strong>Impacto económico:</strong> +150 millones USD en daños</li>
+    <li><strong>Agricultura afectada:</strong> Reducción promedio 30% en cultivos claves</li>
+  </ul>
+</div>
+
+<div id="prediccionPane" class="tabContent">
+  <img src="https://cdn-icons-png.flaticon.com/512/254/254032.png" alt="Foco" style="float:right; width:50px; margin-left:10px;">
+  <h3>Predicción y Zonas Seguras</h3>
+  <p>Con estos datos podemos predecir y visualizar qué lugares de Piura son más seguros ante lluvias torrenciales.</p>
+</div>
+
+<div class="legendPane">
+  <strong>Intensidad de lluvia / Inundación</strong>
+  <div><span class="color-box" style="background:green;"></span>Ligera</div>
+  <div><span class="color-box" style="background:yellow;"></span>Moderada</div>
+  <div><span class="color-box" style="background:red;"></span>Intensa</div>
+</div>
+
+<!-- Script externo -->
+<script src="map.js"></script>
+</body>
+</html>

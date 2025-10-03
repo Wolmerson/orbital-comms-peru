@@ -21,3 +21,4 @@ plt.figure(figsize=(10,6))
 precip.isel(time=0).plot(cmap="Blues")
 plt.title("Precipitación IMERG (mm/hr) - 1 Marzo 2023")
 plt.show()
+

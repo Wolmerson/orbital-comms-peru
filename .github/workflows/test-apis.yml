@@ -1,0 +1,43 @@
+name: Test APIs NASA GIBS
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  test-nasa-apis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Test MODIS API
+      run: |
+        echo "Testing MODIS Terra True Color..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/2024-01-01/GoogleMapsCompatible_Level9/3/4/2.jpg")
+        if [ $response -eq 200 ]; then
+          echo "✅ MODIS API: OK"
+        else
+          echo "❌ MODIS API: FAIL (HTTP $response)"
+          exit 1
+        fi
+    
+    - name: Test IMERG API
+      run: |
+        echo "Testing IMERG Precipitation..."
+        response=$(curl -s -o /dev/null -w "%{http_code}" "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/IMERG_Precipitation_Rate_30min/default/2024-01-01/GoogleMapsCompatible_Level6/3/4/2.png")
+        if [ $response -eq 200 ]; then
+          echo "✅ IMERG API: OK"
+        else
+          echo "❌ IMERG API: FAIL (HTTP $response)"
+          exit 1
+        fi
+    
+    - name: Test Leaflet CDN
+      run: |
+        echo "Testing Leaflet resources..."
+        curl -f -s "https://unpkg.com/leaflet/dist/leaflet.css" > /dev/null
+        curl -f -s "https://unpkg.com/leaflet/dist/leaflet.js" > /dev/null
+        curl -f -s "https://unpkg.com/leaflet.heat/dist/leaflet-heat.js" > /dev/null
+        echo "✅ Leaflet CDN: OK"
