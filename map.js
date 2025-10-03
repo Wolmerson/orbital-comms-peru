@@ -1,9 +1,14 @@
-// map.js (versión final: clases en botones + fallback de fecha + feedback al usuario)
+// map.js — versión final con fallback, feedback y toasts
+/* Requisitos en el HTML:
+   - elementos con id: date, goDate, fitPeru, fitPiura, layerInfo, coords
+   - div#map presente
+*/
+
 const peruBounds = [[-18.5, -81.5], [1.0, -68.0]];
 const piuraBounds = [[-5.3, -80.75], [-5.1, -80.55]];
 const today = new Date().toISOString().split('T')[0];
 
-// ---------- UTILIDADES FECHA ----------
+// ---------- utilidades de fecha ----------
 function formatDateYYYYMMDD(date) {
   const y = date.getUTCFullYear();
   const m = String(date.getUTCMonth() + 1).padStart(2, '0');
@@ -16,7 +21,7 @@ function dateMinusDays(dateStr, days) {
   return formatDateYYYYMMDD(d);
 }
 
-// ---------- PLANTILLAS WMTS (EPSG:3857) ----------
+// ---------- plantillas WMTS (EPSG:3857) ----------
 function modisTemplate(time) {
   return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/${time}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
 }
@@ -27,13 +32,14 @@ function sstAnomalyTemplate(time) {
   return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/Sea_Surface_Temperature_Anomalies_L4_MUR25/default/${time}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png`;
 }
 
-// ---------- COMPROBAR TILE (HEAD request) ----------
+// ---------- comprobación ligera de tiles ----------
 async function checkTileAvailable(templateFunc, dateStr, sampleZ = 3, sampleX = 4, sampleY = 2, timeoutMs = 6000) {
   const template = templateFunc(dateStr);
   const url = template.replace('{z}', sampleZ).replace('{x}', sampleX).replace('{y}', sampleY);
   try {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
+    // HEAD es ligero; algunos servidores devuelven content-type, otros no.
     const resp = await fetch(url, { method: 'HEAD', mode: 'cors', signal: controller.signal });
     clearTimeout(id);
     if (!resp.ok) {
@@ -41,9 +47,7 @@ async function checkTileAvailable(templateFunc, dateStr, sampleZ = 3, sampleX = 
       return false;
     }
     const ct = resp.headers.get('content-type') || '';
-    if (ct.startsWith('image') || ct.includes('octet-stream') || ct === '') {
-      return true;
-    }
+    if (ct.startsWith('image') || ct.includes('octet-stream') || ct === '') return true;
     return false;
   } catch (err) {
     console.debug('Tile check error for', url, err && err.name ? err.name : err);
@@ -51,46 +55,78 @@ async function checkTileAvailable(templateFunc, dateStr, sampleZ = 3, sampleX = 
   }
 }
 
-async function getAvailableDate(templateFunc, dateStr, maxBack = 5) {
+async function getAvailableDate(templateFunc, dateStr, maxBack = 7) {
   for (let i = 0; i < maxBack; i++) {
     const candidate = dateMinusDays(dateStr, i);
     const ok = await checkTileAvailable(templateFunc, candidate);
     if (ok) {
       if (i > 0) console.info(`Fallback: usando fecha ${candidate} (retrocedimos ${i} días)`);
-      return candidate;
+      return { date: candidate, backDays: i };
     }
   }
   console.warn(`No se encontró fecha con tiles en los últimos ${maxBack} días a partir de ${dateStr}`);
-  return dateStr;
+  return { date: dateStr, backDays: null };
 }
 
-// ---------- INICIALIZACIÓN PRINCIPAL ----------
+// ---------- helper: toast notification ----------
+function createToast(message, type = 'info', duration = 5000) {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.style.position = 'fixed';
+    container.style.top = '12px';
+    container.style.right = '12px';
+    container.style.zIndex = 3000;
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '8px';
+    document.body.appendChild(container);
+  }
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.style.background = (type === 'error') ? '#ff6b6b' : (type === 'success' ? '#2ecc71' : '#333');
+  el.style.color = '#fff';
+  el.style.padding = '10px 14px';
+  el.style.borderRadius = '8px';
+  el.style.boxShadow = '0 6px 18px rgba(0,0,0,0.35)';
+  el.style.fontSize = '13px';
+  el.style.maxWidth = '320px';
+  el.innerText = message;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity 400ms, transform 400ms';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-8px)';
+    setTimeout(() => el.remove(), 450);
+  }, duration);
+  return el;
+}
+
+// ---------- main ----------
 document.addEventListener('DOMContentLoaded', async () => {
-  // Si existe input fecha, inicializar
   const dateInput = document.getElementById('date');
   if (dateInput) dateInput.value = today;
 
-  // Asegurar que los botones de la barra superior tengan la clase .btn (si existen)
+  // asignar clases .btn a botones topbar si no las tienen
   function ensureButtonClass(id, extraClass = '') {
     const el = document.getElementById(id);
     if (!el) return;
-    el.classList.add('btn');
-    if (extraClass) el.classList.add(extraClass);
-    // accesibilidad
+    if (!el.classList.contains('btn')) el.classList.add('btn');
+    if (extraClass && !el.classList.contains(extraClass)) el.classList.add(extraClass);
     if (!el.getAttribute('role')) el.setAttribute('role', 'button');
   }
   ensureButtonClass('goDate', 'secondary');
   ensureButtonClass('fitPeru', '');
   ensureButtonClass('fitPiura', '');
-  // otros botones que puedas tener: agregar aquí ensureButtonClass('miBoton')
 
-  // Crear mapa
+  // crear mapa
   const map = L.map('map', { zoomSnap: 0.5, worldCopyJump: false }).setView([-9.2, -75], 5);
 
-  // fallback base layer (Esri)
+  // fallback base
   const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri' });
 
-  // opciones comunes GIBS
+  // opciones comunes
   const commonOptions = {
     tileSize: 256,
     minZoom: 2,
@@ -99,20 +135,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     detectRetina: false
   };
 
-  // comprobar fecha disponible (evita negro)
-  const maxBackDays = 7; // si quieres buscar más, aumenta este número
-  const checkedModisDate = await getAvailableDate(modisTemplate, today, maxBackDays);
-  const checkedImergDate = await getAvailableDate(imergTemplate, today, maxBackDays);
+  // comprobar fecha disponible para MODIS e IMERG (maxBack configurable)
+  const maxBackDays = 7;
+  createToast('Comprobando disponibilidad de imágenes GIBS...', 'info', 2500);
+  const checkedModis = await getAvailableDate(modisTemplate, today, maxBackDays);
+  const checkedImerg = await getAvailableDate(imergTemplate, today, maxBackDays);
 
-  let currentDate = checkedModisDate || today;
+  const checkedModisDate = checkedModis.date;
+  const checkedImergDate = checkedImerg.date;
+  if (checkedModis.backDays && checkedModis.backDays > 0) createToast(`MODIS: usando ${checkedModisDate} (última disponible)`, 'info', 4500);
+  if (checkedImerg.backDays && checkedImerg.backDays > 0) createToast(`IMERG: usando ${checkedImergDate} (última disponible)`, 'info', 3500);
 
-  // crear capas iniciales con fechas verificadas
+  let currentDate = checkedModisDate;
+
+  // capas iniciales
   let modisLayer = L.tileLayer(modisTemplate(currentDate), Object.assign({}, commonOptions, { maxZoom: 9, attribution: "NASA EOSDIS GIBS — MODIS Terra True Color" }));
   let imergLayer = L.tileLayer(imergTemplate(checkedImergDate), Object.assign({}, commonOptions, { maxZoom: 6, opacity: 0.65, attribution: "NASA EOSDIS GIBS — IMERG Precipitation Rate (30min)" }));
-  let sstLayer = L.tileLayer(sstAnomalyTemplate(currentDate), Object.assign({}, commonOptions, { maxZoom: 6, opacity: 0.75, attribution: "NASA EOSDIS GIBS — Sea Surface Temperature Anomalies" }));
+  let sstLayer = L.tileLayer(sstAnomalyTemplate(currentDate), Object.assign({}, commonOptions, { maxZoom: 6, opacity: 0.75, attribution: "NASA EOSDIS GIBS — SST Anomalies" }));
   let streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap contributors', opacity:0.8 });
 
-  // heatmaps (placeholders)
+  // heatmaps
   function generarDatosAleatorios(cantidad=200){
     const puntos=[];
     for(let i=0;i<cantidad;i++){
@@ -137,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   let heatFuturo = L.heatLayer(generarPrediccionesFuturas(), { radius:35, blur:10, maxZoom:15, opacity:0.7, gradient:{0.0:'blue',0.5:'yellow',1.0:'red'} });
 
-  // añadir capas por defecto
+  // añadir por defecto
   modisLayer.addTo(map);
   imergLayer.addTo(map);
 
@@ -151,7 +193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     "Predicción futura inundaciones": heatFuturo
   }, { collapsed:false }).addTo(map);
 
-  // mostrar calles según zoom
+  // streets visibility según zoom
   function updateStreets(){
     if(map.getZoom() > 10){
       if(!map.hasLayer(streetLayer)) streetLayer.addTo(map);
@@ -161,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   map.on('zoomend', updateStreets);
 
-  // botones "Ir a"
+  // Botones "Ir a"
   const fitPeruBtn = document.getElementById('fitPeru');
   if (fitPeruBtn) fitPeruBtn.addEventListener('click', () => { map.fitBounds(peruBounds, { padding:[20,20] }); });
 
@@ -174,33 +216,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateStreets();
   });
 
-  // ---- función para recrear capas con fecha segura ----
+  // función para recrear capas con fecha segura
   async function recreateLayersForDate(requestedDate) {
-    // feedback visual: informamos al usuario
     const layerInfoEl = document.getElementById('layerInfo');
     if (layerInfoEl) layerInfoEl.innerText = 'Comprobando disponibilidad de tiles...';
 
-    // buscar fechas disponibles
     const availableModis = await getAvailableDate(modisTemplate, requestedDate, maxBackDays);
     const availableImerg = await getAvailableDate(imergTemplate, requestedDate, maxBackDays);
 
-    currentDate = availableModis; // se usa como referencia en labels
+    currentDate = availableModis.date;
 
-    // eliminar capas antiguas
     try { if(map.hasLayer(modisLayer)) map.removeLayer(modisLayer); } catch(e){}
     try { if(map.hasLayer(imergLayer)) map.removeLayer(imergLayer); } catch(e){}
     try { if(map.hasLayer(sstLayer)) map.removeLayer(sstLayer); } catch(e){}
 
-    // crear nuevas capas con fechas encontradas
-    modisLayer = L.tileLayer(modisTemplate(availableModis), Object.assign({}, commonOptions, { maxZoom:9, attribution:"NASA EOSDIS GIBS — MODIS Terra True Color" }));
-    imergLayer = L.tileLayer(imergTemplate(availableImerg), Object.assign({}, commonOptions, { maxZoom:6, opacity:0.65, attribution:"NASA EOSDIS GIBS — IMERG Precipitation Rate (30min)" }));
-    sstLayer = L.tileLayer(sstAnomalyTemplate(availableModis), Object.assign({}, commonOptions, { maxZoom:6, opacity:0.75, attribution:"NASA EOSDIS GIBS — SST Anomalies" }));
+    modisLayer = L.tileLayer(modisTemplate(availableModis.date), Object.assign({}, commonOptions, { maxZoom:9, attribution:"NASA EOSDIS GIBS — MODIS Terra True Color" }));
+    imergLayer = L.tileLayer(imergTemplate(availableImerg.date), Object.assign({}, commonOptions, { maxZoom:6, opacity:0.65, attribution:"NASA EOSDIS GIBS — IMERG Precipitation Rate (30min)" }));
+    sstLayer = L.tileLayer(sstAnomalyTemplate(availableModis.date), Object.assign({}, commonOptions, { maxZoom:6, opacity:0.75, attribution:"NASA EOSDIS GIBS — SST Anomalies" }));
 
-    // añadir al mapa
     modisLayer.addTo(map);
     imergLayer.addTo(map);
 
-    // reconstruir control de capas (para evitar referencias a capas antiguas)
     try { map.removeControl(layerControl); } catch(e){}
     layerControl = L.control.layers({"MODIS True Color (GIBS)": modisLayer, "Esri World Imagery (fallback)": esri}, {
       "IMERG Precipitación (30min)": imergLayer,
@@ -211,21 +247,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       "Predicción futura inundaciones": heatFuturo
     }, { collapsed:false }).addTo(map);
 
-    // actualizar label con la fecha real usada (si hubo fallback se verá diferente a la solicitada)
     if (layerInfoEl) {
-      if (availableModis !== requestedDate) {
-        layerInfoEl.innerText = `Capa: MODIS — Fecha usada: ${availableModis} (fallback)`;
+      if (availableModis.backDays && availableModis.backDays > 0) {
+        layerInfoEl.innerText = `Capa: MODIS — Fecha usada: ${availableModis.date} (fallback ${availableModis.backDays}d)`;
+        createToast(`Se usó ${availableModis.date} porque la fecha solicitada no tiene imágenes.`, 'info', 5000);
       } else {
         layerInfoEl.innerText = `Capa: MODIS — Fecha: ${currentDate}`;
       }
     }
 
-    // adjuntar handlers para depuración
     modisLayer.on('tileerror', (e) => console.warn('MODIS tile error', e));
     imergLayer.on('tileerror', (e) => console.warn('IMERG tile error', e));
   }
 
-  // botón "Aplicar fecha"
+  // botón Aplicar fecha
   const goDateBtn = document.getElementById('goDate');
   if (goDateBtn) {
     goDateBtn.addEventListener('click', async () => {
@@ -236,14 +271,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       goDateBtn.innerText = 'Comprobando...';
       try {
         await recreateLayersForDate(d);
-        // regenerar heatmaps como placeholder
         heatPiura.setLatLngs(generarDatosAleatorios()).addTo(map);
         heatPeru.setLatLngs(generarDatosAleatorios()).addTo(map);
         heatFuturo.setLatLngs(generarPrediccionesFuturas()).addTo(map);
         updateStreets();
       } catch (err) {
         console.error('Error actualizando capas:', err);
-        alert('No se pudo actualizar las capas. Revisa la consola.');
+        createToast('Error actualizando capas. Revisa consola.', 'error', 6000);
       } finally {
         goDateBtn.disabled = false;
         goDateBtn.innerText = prevText || 'Aplicar fecha';
@@ -251,7 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // clic en mapa -> coordenadas y marcador
+  // click en mapa -> coords
   let marker = null;
   map.on('click', function(e) {
     const lat = Number(e.latlng.lat).toFixed(6);
@@ -266,7 +300,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   map.fitBounds(peruBounds, { padding:[20,20] });
   L.control.scale().addTo(map);
 
-  // pestañas + charts (sin cambios funcionales)
+  // pestañas + charts (intactos)
   const tabBtns = document.querySelectorAll('.tabBtn');
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -285,7 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Charts (mantengo lo que ya tenías — si faltan canvas, no romperá)
+  // charts try-catch para no romper si canvas faltan
   try {
     new Chart(document.getElementById('rainChart').getContext('2d'), {
       type: 'bar',
