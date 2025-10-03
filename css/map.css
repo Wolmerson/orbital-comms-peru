@@ -5,6 +5,7 @@ html, body {
   font-family: Arial, sans-serif; 
 }
 
+/* Barra superior */
 #topbar { 
   background:#111; 
   color:#fff; 
@@ -26,17 +27,26 @@ html, body {
   align-items:center; 
 }
 
+/* Contenedor del mapa */
 #map { 
   width:100%; 
   height:calc(100% - 48px); 
 }
 
+/* Botones */
 .btn { 
   background:#2b7; 
   border:none; 
   padding:6px 10px; 
   border-radius:4px; 
   cursor:pointer; 
+  color:#fff;   /* 🔹 AÑADIDO: ahora el texto es blanco y visible */
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.btn:hover { 
+  background:#24995e; /* Verde más oscuro al pasar el mouse */
 }
 
 .btn.secondary { 
@@ -44,12 +54,18 @@ html, body {
   color:#fff; 
 }
 
+.btn.secondary:hover { 
+  background:#357ae8; /* Azul más fuerte al pasar el mouse */
+}
+
+/* Labels */
 label { 
   color:#fff; 
   font-size:13px; 
   margin-right:6px; 
 }
 
+/* Panel de info (coordenadas) */
 .infoPane {
   position:absolute;
   top:60px;
@@ -61,8 +77,10 @@ label {
   box-shadow:0 2px 6px rgba(0,0,0,0.3);
   max-width:320px;
   font-size:13px;
+  color:#000;  /* Texto negro dentro del panel */
 }
 
+/* Panel de leyenda */
 .legendPane {
   position:absolute;
   top:200px;
@@ -74,6 +92,7 @@ label {
   box-shadow:0 2px 6px rgba(0,0,0,0.3);
   max-width:150px;
   font-size:13px;
+  color:#000;
 }
 
 .legendPane div { 
@@ -89,21 +108,7 @@ label {
   border:1px solid #000; 
 }
 
-/* Pestañas */
-.tabContent {
-  position:absolute;
-  top:60px;
-  right:12px;
-  z-index:1000;
-  background:rgba(255,255,255,0.95);
-  padding:10px;
-  border-radius:6px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.3);
-  max-width:400px;
-  font-size:13px;
-  display:none;
-}
-
+/* Pestañas de control */
 .tabsControl { 
   display:flex; 
   gap:4px; 
@@ -118,9 +123,30 @@ label {
   cursor:pointer; 
   border-radius:4px; 
   font-size:12px; 
+  transition: background 0.2s ease;
 }
 
 .tabBtn.active { 
   background:#48f; 
   color:#fff; 
+}
+
+.tabBtn:hover {
+  background:#ddd;
+}
+
+/* Panel de contenido de pestañas */
+.tabContent {
+  position:absolute;
+  top:60px;
+  right:12px;
+  z-index:1000;
+  background:rgba(255,255,255,0.95);
+  padding:10px;
+  border-radius:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  max-width:400px;
+  font-size:13px;
+  display:none;
+  color:#000;
 }
