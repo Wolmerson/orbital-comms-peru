@@ -1,4 +1,4 @@
-// ===== MENU TOGGLE =====
+// ===== MENU TOGGLE =====//
 const navToggle = document.getElementById('navToggle');
 const navLinks = document.getElementById('navLinks');
 

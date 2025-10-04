@@ -1,173 +1,740 @@
-/* map.css — estilos corregidos para topbar, botones, tabs, info, legend, toasts */
+/* map.css — estilos mejorados con buscador de lugares */
 
-/* layout básico */
+/* ================= RESET Y LAYOUT BÁSICO ================= */
 html, body {
-  height:100%;
-  margin:0;
-  padding:0;
-  font-family: Arial, sans-serif;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
   background: #0a0a0a;
   color: #fff;
 }
 
-/* topbar */
+/* ================= TOPBAR ================= */
 #topbar {
-  background:#111;
-  color:#fff;
-  padding:8px 12px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  height:48px;
-  z-index:1400;
+  background: #111;
+  color: #fff;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  z-index: 1400;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* ajustar mapa para no quedar bajo la barra */
-#map { 
-  width:100%;
-  height:calc(100% - 48px);
-  margin-top:48px; /* por seguridad */
-}
-
-/* heading */
 #topbar h1 {
-  margin:0;
-  font-size:16px;
-  font-weight:600;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
 }
 
-/* controls area */
+/* ================= CONTROLS AREA ================= */
 #controls {
-  margin-left:auto;
-  display:flex;
-  gap:8px;
-  align-items:center;
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-/* botones globales */
-.btn {
-  background:#2b7;
-  border:none;
-  padding:6px 10px;
-  border-radius:4px;
-  cursor:pointer;
-  color:#fff !important;
-  font-weight:600;
-  font-size:13px;
-  transition: background .15s ease, transform .12s ease;
+#topbar label {
+  color: #fff;
+  font-size: 13px;
+  margin-right: 6px;
 }
-.btn:hover { background:#24995e; transform: translateY(-1px); }
+
+#topbar input[type="date"] {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #222;
+  color: #fff;
+  font-size: 13px;
+}
+
+/* ================= BOTONES GLOBALES ================= */
+.btn {
+  background: #2b7;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background 0.15s ease, transform 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: #24995e;
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
 
 .btn.secondary {
-  background:#48f;
-  color:#fff !important;
-}
-.btn.secondary:hover { background:#357ae8; }
-
-/* label en topbar */
-#topbar label { color:#fff; font-size:13px; margin-right:6px; }
-
-/* info pane (coordenadas) */
-.infoPane {
-  position:absolute;
-  top:60px;
-  left:12px;
-  z-index:1000;
-  background:rgba(255,255,255,0.95);
-  padding:8px;
-  border-radius:6px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.3);
-  max-width:320px;
-  font-size:13px;
-  color:#000;
+  background: #48f;
+  color: #fff !important;
 }
 
-/* legend pane */
-.legendPane {
-  position:absolute;
-  top:200px;
-  left:12px;
-  z-index:1000;
-  background:rgba(255,255,255,0.95);
-  padding:8px;
-  border-radius:6px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.3);
-  max-width:150px;
-  font-size:13px;
-  color:#000;
+.btn.secondary:hover {
+  background: #357ae8;
 }
-.legendPane div { margin-top:4px; display:flex; align-items:center; gap:6px; }
-.legendPane .color-box { width:18px; height:18px; border:1px solid #000; }
 
-/* tabs control */
-.tabsControl { display:flex; gap:4px; margin-left:8px; }
+/* ================= TABS CONTROL ================= */
+.tabsControl {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+  flex-wrap: wrap;
+}
+
 .tabBtn {
-  background:#f5f5f5;
-  color:#000 !important;
-  border:none;
-  padding:6px 12px;
-  cursor:pointer;
-  border-radius:6px;
-  font-size:13px;
-  font-weight:600;
-  transition: background .12s ease;
-  min-width: 140px;
-  text-align:center;
-}
-.tabBtn:hover { background:#eee; }
-.tabBtn.active { background:#48f; color:#fff !important; }
-
-/* tab content */
-.tabContent {
-  position:absolute;
-  top:60px;
-  right:12px;
-  z-index:1000;
-  background:rgba(255,255,255,0.95);
-  padding:10px;
-  border-radius:6px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.3);
-  max-width:420px;
-  font-size:13px;
-  display:none;
-  color:#000;
-}
-
-/* Leaflet control styles: forzar contraste y legibilidad */
-.leaflet-control, .leaflet-control-layers {
-  font-family: Arial, sans-serif;
-}
-.leaflet-control-layers, .leaflet-control-layers-list {
-  background: rgba(255,255,255,0.95) !important;
+  background: #f5f5f5;
   color: #000 !important;
-  border-radius:6px !important;
-  padding:6px !important;
-}
-.leaflet-control-layers label, .leaflet-control-layers span {
-  color:#000 !important;
-  font-size:13px !important;
-  display:inline-block;
-  padding:2px 6px;
-}
-
-/* hacer la lista de capas desplazable si es larga */
-.leaflet-control-layers-expanded {
-  max-height: 60vh !important;
-  overflow: auto !important;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.12s ease;
+  min-width: 120px;
+  text-align: center;
 }
 
-/* Toast styles (para notificaciones pequeñas) */
-#toastContainer { pointer-events: none; }
-.toast { pointer-events: auto; }
+.tabBtn:hover {
+  background: #eee;
+}
 
-/* responsive: reducir min-width de tabs en móviles */
+.tabBtn.active {
+  background: #48f;
+  color: #fff !important;
+}
+
+/* ================= MAPA ================= */
+#map {
+  width: 100%;
+  height: calc(100% - 48px);
+  margin-top: 48px;
+}
+
+/* ================= BUSCADOR DE LUGARES ================= */
+#geocoder {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1500;
+  width: 90%;
+  max-width: 400px;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.98);
+  color: #111;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+#searchInput:focus {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+#searchInput::placeholder {
+  color: #999;
+  font-weight: 400;
+}
+
+#searchResults {
+  display: none;
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.search-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  transition: background 0.15s ease;
+  color: #111;
+  font-size: 13px;
+}
+
+.search-item:last-child {
+  border-bottom: none;
+}
+
+.search-item:hover {
+  background: rgba(72, 136, 255, 0.08);
+}
+
+.search-item strong {
+  display: block;
+  color: #000;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.search-item small {
+  color: #666;
+  font-size: 12px;
+}
+
+/* ================= INFO PANE (COORDENADAS) ================= */
+.infoPane {
+  position: absolute;
+  top: 140px;
+  left: 12px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  max-width: 320px;
+  font-size: 13px;
+  color: #000;
+}
+
+.infoPane strong {
+  color: #111;
+  font-size: 14px;
+}
+
+/* ================= LEGEND PANE ================= */
+.legendPane {
+  position: absolute;
+  top: 240px;
+  left: 12px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  max-width: 160px;
+  font-size: 13px;
+  color: #000;
+}
+
+.legendPane strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #111;
+}
+
+.legendPane div {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendPane .color-box {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #000;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ================= TAB CONTENT ================= */
+.tabContent {
+  position: absolute;
+  top: 60px;
+  right: 12px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 14px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  max-width: 450px;
+  font-size: 13px;
+  display: none;
+  color: #000;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.tabContent h3,
+.tabContent h4 {
+  color: #111;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.tabContent h3 {
+  font-size: 18px;
+  margin-top: 0;
+}
+
+.tabContent h4 {
+  font-size: 15px;
+}
+
+/* ================= PANEL DE CAPAS ARRASTRABLE ================= */
+#layerPanel {
+  position: fixed;
+  top: 80px;
+  right: 12px;
+  z-index: 2000;
+  min-width: 260px;
+  max-width: 380px;
+  background: rgba(255, 255, 255, 0.98);
+  color: #111;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 160ms ease;
+  user-select: none;
+}
+
+#layerPanel[aria-hidden="true"] {
+  display: none;
+}
+
+/* Header del panel (drag handle) */
+#layerPanel .panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: grab;
+  background: linear-gradient(135deg, rgba(72, 136, 255, 0.08), rgba(0, 0, 0, 0.02));
+  border-bottom: 2px solid rgba(72, 136, 255, 0.2);
+}
+
+#layerPanel .panelHeader:active {
+  cursor: grabbing;
+}
+
+/* Lista de capas */
+#layerList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50vh;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+/* Fila de capa individual */
+.layer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.layer-row:hover {
+  background: rgba(72, 136, 255, 0.06);
+  border-color: rgba(72, 136, 255, 0.2);
+}
+
+/* Destacar capa SST especial */
+.layer-row.sst-special {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.08), rgba(255, 87, 34, 0.08));
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  font-weight: 600;
+}
+
+.layer-row.sst-special:hover {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.12), rgba(255, 87, 34, 0.12));
+  border-color: rgba(255, 152, 0, 0.5);
+}
+
+.layer-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #48f;
+  flex-shrink: 0;
+}
+
+.layer-row input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.layer-row label {
+  font-size: 13px;
+  color: #111;
+  cursor: pointer;
+  flex: 1;
+  user-select: none;
+  line-height: 1.4;
+}
+
+/* Footer del panel */
+#layerPanel .panelFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+#layerPanel .panelFooter .btn {
+  padding: 8px 12px;
+  font-size: 13px;
+  flex: 1;
+}
+
+/* ================= LEAFLET CONTROL LAYERS (OCULTAR NATIVO) ================= */
+.leaflet-control-layers {
+  display: none !important;
+}
+
+/* ================= LEAFLET OTROS CONTROLES ================= */
+.leaflet-control,
+.leaflet-control-zoom {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.leaflet-control-zoom a {
+  color: #111 !important;
+  font-weight: 700;
+}
+
+.leaflet-control-scale-line {
+  background: rgba(255, 255, 255, 0.9);
+  color: #111;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+/* ================= TOAST NOTIFICATIONS ================= */
+#toastContainer {
+  pointer-events: none;
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  pointer-events: auto;
+  background: #333;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  max-width: 340px;
+  opacity: 1;
+  transition: opacity 400ms, transform 400ms;
+  font-weight: 500;
+}
+
+.toast.toast-error {
+  background: #ff6b6b;
+}
+
+.toast.toast-success {
+  background: #2ecc71;
+}
+
+.toast.toast-info {
+  background: #3498db;
+}
+
+/* ================= SCROLLBAR PERSONALIZADO ================= */
+#layerList::-webkit-scrollbar,
+#searchResults::-webkit-scrollbar,
+.tabContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+#layerList::-webkit-scrollbar-track,
+#searchResults::-webkit-scrollbar-track,
+.tabContent::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+#layerList::-webkit-scrollbar-thumb,
+#searchResults::-webkit-scrollbar-thumb,
+.tabContent::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+#layerList::-webkit-scrollbar-thumb:hover,
+#searchResults::-webkit-scrollbar-thumb:hover,
+.tabContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ================= PANEL DE ANIMACIÓN TEMPORAL ================= */
+#animationPanel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  background: rgba(255, 255, 255, 0.98);
+  color: #111;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 14px 18px;
+  min-width: 600px;
+  max-width: 90vw;
+}
+
+.animPanelHeader {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(72, 136, 255, 0.3);
+  color: #111;
+}
+
+.animControls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dateRange {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dateRange label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+}
+
+.dateRange input[type="date"] {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #111;
+  font-size: 13px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.playControls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.animBtn {
+  background: #48f;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background 0.15s ease, transform 0.12s ease;
+  flex: 1;
+  min-width: 100px;
+}
+
+.animBtn:hover {
+  background: #357ae8;
+  transform: translateY(-1px);
+}
+
+.animBtn:active {
+  transform: translateY(0);
+}
+
+.speedControl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.speedControl label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+}
+
+.speedControl select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #111;
+  font-size: 13px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.progressContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #48f, #2ecc71);
+  width: 0%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.currentDateDisplay {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  text-align: center;
+  padding: 4px;
+  background: rgba(72, 136, 255, 0.08);
+  border-radius: 4px;
+}
+
+/* ================= RESPONSIVE ANIMACIÓN ================= */
 @media (max-width: 768px) {
-  .tabBtn { min-width: 100px; padding:6px 8px; font-size:12px; }
-  #map { height: calc(100% - 48px); margin-top:48px; }
-  .infoPane { left:8px; top:70px; }
-  .tabContent { right:8px; top:70px; max-width: 90vw; }
+  #animationPanel {
+    min-width: auto;
+    width: calc(100% - 24px);
+    left: 12px;
+    transform: none;
+  }
+
+  .dateRange,
+  .playControls {
+    flex-direction: column;
+  }
+
+  .dateRange input[type="date"],
+  .animBtn {
+    width: 100%;
+  }
+}
+@media (max-width: 768px) {
+  #topbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 48px;
+    padding: 6px 8px;
+  }
+
+  #topbar h1 {
+    font-size: 14px;
+  }
+
+  #controls {
+    width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+    margin-top: 4px;
+  }
+
+  .tabBtn {
+    min-width: 100px;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  #map {
+    height: calc(100% - 60px);
+    margin-top: 60px;
+  }
+
+  #geocoder {
+    top: 70px;
+    width: calc(100% - 24px);
+    left: 12px;
+    transform: none;
+  }
+
+  .infoPane {
+    left: 8px;
+    top: 160px;
+    max-width: calc(100vw - 16px);
+  }
+
+  .legendPane {
+    left: 8px;
+    top: 260px;
+  }
+
+  .tabContent {
+    right: 8px;
+    top: 70px;
+    max-width: calc(100vw - 16px);
+  }
+
+  #layerPanel {
+    min-width: 200px;
+    max-width: calc(100vw - 16px);
+    left: 8px;
+    right: 8px;
+    top: 72px;
+  }
+
+  #layerPanel .panelHeader {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  #searchInput {
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+
+  .search-item {
+    padding: 10px 12px;
+  }
 }

@@ -1,0 +1,52 @@
+guide-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  padding: 40px;
+  text-align: center;
+}
+
+.step {
+  display: none;
+  max-width: 700px;
+  animation: fadeIn 1s ease;
+}
+
+.step.active {
+  display: block;
+}
+
+.step h2 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+.step p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+}
+
+.next-btn, .restart-btn {
+  margin-top: 20px;
+  padding: 12px 25px;
+  border-radius: 25px;
+  border: none;
+  background: #00c6fb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.next-btn:hover, .restart-btn:hover {
+  background: #005bea;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
