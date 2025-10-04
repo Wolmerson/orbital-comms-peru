@@ -1,1 +1,1 @@
-hiiiii
+Este proyecto es desarrollado para investigadores, estudiantes y ciudadanos que necesiten informacion para predecir e informarce de los cambios climaticos y como estos pueden afectar sus ciudades, en esta aplicacion se desarrollara una pagina para que cualquier usuario pueda acceder a informacion dada por la nasa para usarla a su favor.
